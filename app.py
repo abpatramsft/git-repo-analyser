@@ -79,16 +79,37 @@ async def analyze_github_repo(repo_url: str, analysis_type: str = "overview") ->
                     "content": delta
                 })
         elif event.type.value == "tool.execution_start":
+            tool_name = event.data.tool_name
+            tool_call_id = getattr(event.data, 'tool_call_id', None)
+            tool_args = getattr(event.data, 'arguments', None)
+            print(f"\n{'='*60}")
+            print(f"🔧 TOOL CALLED: {tool_name}")
+            print(f"   Call ID: {tool_call_id}")
+            if tool_args:
+                print(f"   Arguments: {tool_args}")
+            print(f"{'='*60}")
             events_log.append({
                 "type": "tool_start",
-                "tool_name": event.data.tool_name,
-                "tool_call_id": getattr(event.data, 'tool_call_id', None)
+                "tool_name": tool_name,
+                "tool_call_id": tool_call_id
             })
         elif event.type.value == "tool.execution_complete":
+            tool_call_id = event.data.tool_call_id
+            result = getattr(event.data, 'result', None)
+            print(f"\n{'='*60}")
+            print(f"✅ TOOL RESULT (Call ID: {tool_call_id})")
+            print(f"-"*60)
+            # Truncate result if too long for readability
+            result_str = str(result) if result else "No result"
+            if len(result_str) > 1000:
+                print(f"{result_str[:1000]}...\n[TRUNCATED - {len(result_str)} chars total]")
+            else:
+                print(result_str)
+            print(f"{'='*60}\n")
             events_log.append({
                 "type": "tool_complete",
-                "tool_call_id": event.data.tool_call_id,
-                "result": getattr(event.data, 'result', None)
+                "tool_call_id": tool_call_id,
+                "result": result
             })
         elif event.type.value == "session.idle":
             done.set()
@@ -207,6 +228,6 @@ if __name__ == '__main__':
     print("=" * 60)
     print("\nAnalyze GitHub repositories and generate flow diagrams")
     print("Using GitHub MCP Server for repository access")
-    print("\nStarting server on http://localhost:5002")
+    print("\nStarting server on http://localhost:5001")
     print("=" * 60)
     app.run(debug=True, port=5002)

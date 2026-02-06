@@ -8,6 +8,9 @@ A web application that analyzes GitHub repositories and generates visual overvie
 - **Structure Analysis**: Explore the file structure and understand the project organization
 - **Flow Diagrams**: Generate Mermaid-based flow diagrams showing the architecture and component relationships
 - **Dependency Analysis**: Analyze project dependencies from package.json, requirements.txt, etc.
+- **Application variations**: There are two variations of the repo analyser:
+ - Simple repo analyzer - This uses the web_fetch tool to read the github files from the web and analyse and provide the response
+ - Advacned repo analyzer - This clones the public repo a "temp_repos" folder, and then leverages the file read and search tools to perform a deeper analysis of the file and its content. Wroks well for more complicated repos and deeper understanding with file level read and search functionalities
 
 ## Prerequisites
 
@@ -30,11 +33,18 @@ pip install -r requirements.txt
 ## Usage
 
 1. Start the application:
+
+To start the Simple repo analyser: 
 ```bash
 python app.py
 ```
 
-2. Open your browser and navigate to: http://localhost:5002
+To start the Advacned repo analyser: 
+```bash
+python advanced_app.py
+```
+
+2. Open your browser and navigate to: http://localhost:5001 (if you are running app.py) and http://localhost:5002 (if you are running advanced_app.py)
 
 3. Enter a GitHub repository URL (e.g., `https://github.com/microsoft/vscode`)
 
