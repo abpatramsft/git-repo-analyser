@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Repo Visualiser</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+            --purple: #a371f7;
+            --github-green: #238636;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .app {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+        }
+
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--text-primary);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .powered-by {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .powered-by svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--text-secondary);
+        }
+
+        /* Analysis Type Selector */
+        .analysis-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .analysis-type-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .analysis-type-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .analysis-type-btn.active {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .analysis-type-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .repo-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .repo-input:focus {
+            border-color: var(--accent);
+        }
+
+        .repo-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .analyze-btn {
+            padding: 12px 24px;
+            background: var(--github-green);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analyze-btn:hover {
+            background: #2ea043;
+        }
+
+        .analyze-btn:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .analyze-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .example-repos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .example-repo {
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .example-repo:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .example-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .results-section.visible {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .results-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .results-title svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--success);
+        }
+
+        .repo-badge {
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .results-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .results-content pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Markdown Rendering */
+        .results-content h1,
+        .results-content h2,
+        .results-content h3 {
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .results-content h1 { font-size: 22px; }
+        .results-content h2 { font-size: 18px; }
+        .results-content h3 { font-size: 15px; }
+
+        .results-content p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .results-content ul, .results-content ol {
+            margin-bottom: 12px;
+            padding-left: 24px;
+        }
+
+        .results-content li {
+            margin-bottom: 6px;
+        }
+
+        .results-content code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+        }
+
+        .results-content pre code {
+            display: block;
+            padding: 16px;
+            overflow-x: auto;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .results-content strong {
+            color: var(--accent);
+        }
+
+        /* Mermaid Diagram */
+        .mermaid {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading.visible {
+            display: flex;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-message {
+            display: none;
+            padding: 16px;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 8px;
+            color: var(--error);
+            margin-top: 16px;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* Events Log */
+        .events-toggle {
+            margin-top: 16px;
+            padding: 8px 12px;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .events-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .events-log {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .events-log.visible {
+            display: block;
+        }
+
+        .event-item {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-type {
+            color: var(--purple);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <!-- GitHub Logo -->
+                    <svg viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                </div>
+                <h1>Git Repo Visualiser</h1>
+            </div>
+            <p class="tagline">Analyze GitHub repositories and generate visual overviews</p>
+            <div class="powered-by">
+                <svg viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                Powered by GitHub Copilot SDK
+            </div>
+        </header>
+
+        <!-- Analysis Type Selector -->
+        <div class="analysis-types">
+            <button class="analysis-type-btn active" data-type="overview">
+                <svg viewBox="0 0 16 16"><path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75zm7.251 10.324l.004-5.073-.002-2.253A2.25 2.25 0 005.003 2.5H1.5v9h3.757a3.75 3.75 0 011.994.574zM8.755 4.75l-.004 7.322a3.752 3.752 0 011.992-.572H14.5v-9h-3.495a2.25 2.25 0 00-2.25 2.25z"/></svg>
+                Overview
+            </button>
+            <button class="analysis-type-btn" data-type="structure">
+                <svg viewBox="0 0 16 16"><path d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3H7.5a.25.25 0 01-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75z"/></svg>
+                Structure
+            </button>
+            <button class="analysis-type-btn" data-type="diagram">
+                <svg viewBox="0 0 16 16"><path d="M4.75 7a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM5 4.75A.75.75 0 015.75 4h5.5a.75.75 0 010 1.5h-5.5A.75.75 0 015 4.75zM6.75 10a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5z"/><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0114.25 16H1.75A1.75 1.75 0 010 14.25V1.75zm1.75-.25a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V1.75a.25.25 0 00-.25-.25H1.75z"/></svg>
+                Flow Diagram
+            </button>
+            <button class="analysis-type-btn" data-type="dependencies">
+                <svg viewBox="0 0 16 16"><path d="M6.122.392a1.75 1.75 0 011.756 0l5.25 3.045c.54.313.872.89.872 1.514V7.25a.75.75 0 01-1.5 0V5.677L7.75 8.432v6.384a1 1 0 01-1.502.865L.872 12.563A1.75 1.75 0 010 11.049V4.951c0-.624.332-1.2.872-1.514L6.122.392zM7.125 1.69l4.63 2.685L7 7.133 2.245 4.375l4.63-2.685a.25.25 0 01.25 0zM1.5 11.049V5.677l4.75 2.755v5.516l-4.625-2.683a.25.25 0 01-.125-.216zm10.828 3.684l.019-.012-.019.012zm.009-.006l-.009.006.009-.006zm.981-1.167a.75.75 0 111.06 1.06l-1.5 1.5a.747.747 0 01-1.06 0l-1.5-1.5a.75.75 0 111.06-1.06l.22.22V10.75a.75.75 0 011.5 0v2.81l.22-.22z"/></svg>
+                Dependencies
+            </button>
+        </div>
+
+        <!-- Main Input Card -->
+        <div class="card">
+            <div class="input-group">
+                <input type="text" class="repo-input" id="repoInput" 
+                       placeholder="Enter GitHub repository URL (e.g., https://github.com/microsoft/vscode)">
+                <button class="analyze-btn" id="analyzeBtn">
+                    <svg viewBox="0 0 16 16"><path d="M11.28 3.22a.75.75 0 010 1.06L7.56 8l3.72 3.72a.75.75 0 01-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"/></svg>
+                    Analyze
+                </button>
+            </div>
+            <div class="example-label">Try an example:</div>
+            <div class="example-repos">
+                <span class="example-repo" data-repo="microsoft/vscode">microsoft/vscode</span>
+                <span class="example-repo" data-repo="facebook/react">facebook/react</span>
+                <span class="example-repo" data-repo="python/cpython">python/cpython</span>
+                <span class="example-repo" data-repo="torvalds/linux">torvalds/linux</span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Analyzing repository...</span>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="card">
+                <div class="results-header">
+                    <div class="results-title">
+                        <svg viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>
+                        Analysis Complete
+                    </div>
+                    <span class="repo-badge" id="repoBadge"></span>
+                </div>
+                <div class="results-content" id="resultsContent"></div>
+                <button class="events-toggle" id="eventsToggle">Show Events Log</button>
+                <div class="events-log" id="eventsLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mermaid for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#238636',
+                primaryTextColor: '#e6edf3',
+                primaryBorderColor: '#30363d',
+                lineColor: '#8b949e',
+                secondaryColor: '#21262d',
+                tertiaryColor: '#161b22'
+            }
+        });
+
+        // Elements
+        const repoInput = document.getElementById('repoInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+        const repoBadge = document.getElementById('repoBadge');
+        const eventsToggle = document.getElementById('eventsToggle');
+        const eventsLog = document.getElementById('eventsLog');
+        const analysisTypeBtns = document.querySelectorAll('.analysis-type-btn');
+        const exampleRepos = document.querySelectorAll('.example-repo');
+
+        let currentAnalysisType = 'overview';
+
+        // Analysis type selection
+        analysisTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                analysisTypeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentAnalysisType = btn.dataset.type;
+            });
+        });
+
+        // Example repo selection
+        exampleRepos.forEach(repo => {
+            repo.addEventListener('click', () => {
+                repoInput.value = `https://github.com/${repo.dataset.repo}`;
+            });
+        });
+
+        // Events log toggle
+        eventsToggle.addEventListener('click', () => {
+            eventsLog.classList.toggle('visible');
+            eventsToggle.textContent = eventsLog.classList.contains('visible') 
+                ? 'Hide Events Log' 
+                : 'Show Events Log';
+        });
+
+        // Clean mermaid code to fix common issues
+        function cleanMermaidCode(code) {
+            return code
+                // Remove any leading/trailing whitespace
+                .trim()
+                // Remove any HTML tags that might have been added
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '')
+                // Fix common issues with node labels containing special chars
+                .replace(/\[([^\]]*)\]/g, (match, content) => {
+                    // Escape special characters in labels
+                    const cleaned = content.replace(/[<>]/g, '');
+                    return `[${cleaned}]`;
+                })
+                // Remove empty lines at start
+                .replace(/^\s*\n/, '')
+                // Ensure proper line breaks
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join('\n');
+        }
+
+        // Simple markdown to HTML converter
+        function renderMarkdown(text) {
+            // First, extract and process mermaid blocks separately
+            const mermaidBlocks = [];
+            let processedText = text.replace(/```mermaid\s*([\s\S]*?)```/gim, (match, code) => {
+                const cleanedCode = cleanMermaidCode(code);
+                const placeholder = `__MERMAID_BLOCK_${mermaidBlocks.length}__`;
+                mermaidBlocks.push(cleanedCode);
+                return placeholder;
+            });
+
+            let html = processedText
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                // Code blocks
+                .replace(/```(\w+)?\n?([\s\S]*?)```/gim, '<pre><code>$2</code></pre>')
+                // Inline code
+                .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                // Line breaks
+                .replace(/\n/gim, '<br>');
+
+            // Replace mermaid placeholders with actual mermaid divs
+            mermaidBlocks.forEach((code, index) => {
+                html = html.replace(
+                    `__MERMAID_BLOCK_${index}__`,
+                    `<div class="mermaid">${code}</div>`
+                );
+            });
+
+            return html;
+        }
+
+        // Analyze repository
+        async function analyzeRepo() {
+            const repoUrl = repoInput.value.trim();
+            if (!repoUrl) {
+                showError('Please enter a GitHub repository URL');
+                return;
+            }
+
+            // Reset UI
+            loading.classList.add('visible');
+            errorMessage.classList.remove('visible');
+            resultsSection.classList.remove('visible');
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        repo_url: repoUrl,
+                        type: currentAnalysisType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                // Show results
+                repoBadge.textContent = `${data.owner}/${data.repo}`;
+                resultsContent.innerHTML = renderMarkdown(data.response);
+                
+                // Render mermaid diagrams
+                const mermaidDivs = resultsContent.querySelectorAll('.mermaid');
+                for (const div of mermaidDivs) {
+                    const code = div.textContent;
+                    try {
+                        const { svg } = await mermaid.render('mermaid-' + Math.random().toString(36).substr(2, 9), code);
+                        div.innerHTML = svg;
+                    } catch (e) {
+                        console.log('Mermaid rendering error:', e);
+                        // Show the raw code if rendering fails
+                        div.innerHTML = `<div style="color: var(--warning); margin-bottom: 8px;">⚠️ Diagram preview unavailable</div><pre style="text-align: left; font-size: 12px; overflow-x: auto;"><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                    }
+                }
+
+                // Show events log
+                if (data.events && data.events.length > 0) {
+                    eventsLog.innerHTML = data.events
+                        .filter(e => e.type === 'tool_start' || e.type === 'tool_complete')
+                        .map(e => `<div class="event-item"><span class="event-type">${e.type}</span>: ${e.tool_name || e.tool_call_id || ''}</div>`)
+                        .join('');
+                }
+
+                resultsSection.classList.add('visible');
+
+            } catch (error) {
+                showError('Failed to analyze repository: ' + error.message);
+            } finally {
+                loading.classList.remove('visible');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+            loading.classList.remove('visible');
+        }
+
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeRepo);
+        repoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') analyzeRepo();
+        });
+    </script>
+</body>
+</html>
