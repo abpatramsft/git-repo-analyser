@@ -48,6 +48,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Temporary repositories
+temp_repos/
+
 # pytest
 .pytest_cache/
 
