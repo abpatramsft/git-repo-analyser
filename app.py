@@ -228,6 +228,6 @@ if __name__ == '__main__':
     print("=" * 60)
     print("\nAnalyze GitHub repositories and generate flow diagrams")
     print("Using GitHub MCP Server for repository access")
-    print("\nStarting server on http://localhost:5001")
+    print("\nStarting server on http://localhost:5002")
     print("=" * 60)
     app.run(debug=True, port=5002)
