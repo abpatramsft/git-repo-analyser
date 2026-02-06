@@ -9,8 +9,8 @@ A web application that analyzes GitHub repositories and generates visual overvie
 - **Flow Diagrams**: Generate Mermaid-based flow diagrams showing the architecture and component relationships
 - **Dependency Analysis**: Analyze project dependencies from package.json, requirements.txt, etc.
 - **Application variations**: There are two variations of the repo analyser:
- - Simple repo analyzer - This uses the web_fetch tool to read the github files from the web and analyse and provide the response
- - Advacned repo analyzer - This clones the public repo a "temp_repos" folder, and then leverages the file read and search tools to perform the analysis of the repo with all it's files and its content.
+-   Simple repo analyzer - This uses the web_fetch tool to read the github files from the web and analyse and provide the response
+-   Advacned repo analyzer - This clones the public repo a "temp_repos" folder, and then leverages the file read and search tools to perform the analysis of the repo with all it's files and its content.
 
 ## Prerequisites
 
